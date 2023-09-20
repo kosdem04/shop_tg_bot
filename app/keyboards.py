@@ -101,38 +101,19 @@ def show_producer(id_type):
     # print(sneakers)
     items = InlineKeyboardBuilder()
     for sq in producers:
-        items.row(InlineKeyboardButton(text=sq.producer_name, callback_data=sq.producer_name))
+        items.row(InlineKeyboardButton(text=sq.producer_name, callback_data=f'producer_{sq.producer_id}'))
     items.row(InlineKeyboardButton(text='Назад', callback_data='producer_exit'))
     return items.adjust(2).as_markup()
 
 
-def items_xiaomi():
-    xiaomi = db.show_xiaomi('Xiaomi')
+def items_product(id_producer):
+    products = db.show_product(id_producer)
+    types = db.show_types(id_producer)
     # print(sneakers)
     items = InlineKeyboardBuilder()
-    for sq in xiaomi:
+    for sq in products:
         items.row(InlineKeyboardButton(text=sq.product_name, callback_data=f'product_{sq.product_id}'))
-    items.row(InlineKeyboardButton(text='Назад', callback_data='phone_exit'))
-    return items.adjust(2).as_markup()
-
-
-def items_realme():
-    realme = db.show_realme('Realme')
-    # print(sneakers)
-    items = InlineKeyboardBuilder()
-    for sq in realme:
-        items.row(InlineKeyboardButton(text=sq.product_name, callback_data=f'product_{sq.product_id}'))
-    items.row(InlineKeyboardButton(text='Назад', callback_data='phone_exit'))
-    return items.adjust(2).as_markup()
-
-
-def items_huawei():
-    huawei = db.show_huawei('Huawei')
-    # print(sneakers)
-    items = InlineKeyboardBuilder()
-    for sq in huawei:
-        items.row(InlineKeyboardButton(text=sq.product_name, callback_data=f'product_{sq.product_id}'))
-    items.row(InlineKeyboardButton(text='Назад', callback_data='phone_exit'))
+    items.row(InlineKeyboardButton(text='Назад', callback_data=f'exit_{types}'))
     return items.adjust(2).as_markup()
 
 

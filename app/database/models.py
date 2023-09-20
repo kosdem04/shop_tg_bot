@@ -7,7 +7,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy import ForeignKey
 import datetime
 
-engine = create_engine("sqlite:///tg-shop.db", echo=True)
+engine = create_engine("sqlite:///tg-shop.db")
 
 Session = sessionmaker(engine)
 

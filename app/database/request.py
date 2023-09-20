@@ -37,31 +37,22 @@ def add_product(producer_id, name, desc, price, image):
         session.commit()
 
 
-def show_xiaomi(name):
+def show_product(id_producer):
     with Session.begin() as session:
-        producer = session.scalar(select(Producer.producer_id).where(Producer.producer_name == name))
-        xiaomi = session.query(Product).filter(Product.producer_id == producer).all()
+        products = session.query(Product).filter(Product.producer_id == id_producer).all()
         session.expunge_all()
         session.close()
-        return xiaomi
+        return products
 
 
-def show_realme(name):
+def show_types(id_producer):
     with Session.begin() as session:
-        producer = session.scalar(select(Producer.producer_id).where(Producer.producer_name == name))
-        realme = session.query(Product).filter(Product.producer_id == producer).all()
+        producer = session.scalar(select(Producer.type_id).where(Producer.producer_id == id_producer))
+        types = session.scalar(select(Type.type_id).where(Type.type_id == producer))
         session.expunge_all()
         session.close()
-        return realme
+        return types
 
-
-def show_huawei(name):
-    with Session.begin() as session:
-        producer = session.scalar(select(Producer.producer_id).where(Producer.producer_name == name))
-        huawei = session.query(Product).filter(Product.producer_id == producer).all()
-        session.expunge_all()
-        session.close()
-        return huawei
 
 def show_phone_item(sq_id):
     with Session.begin() as session:
@@ -73,7 +64,7 @@ def show_phone_item(sq_id):
 
 def show_producer(id_type):
     with Session.begin() as session:
-        producer = session.query(Producer).filter(Producer.type_id == 1).all()
+        producer = session.query(Producer).filter(Producer.type_id == id_type).all()
         session.expunge_all()
         session.close()
         return producer
@@ -171,3 +162,11 @@ def is_order(user_id):
             return False
         else:
             return True
+
+
+def send_all():
+    with Session.begin() as session:
+        users = session.query(User).all()
+        session.expunge_all()
+        session.close()
+        return users

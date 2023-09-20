@@ -78,23 +78,11 @@ async def catalog(message: types.Message, state: FSMContext):
 @router.message(Search.text)
 async def catalog(message: types.Message, state: FSMContext):
     search = db.search(message.text)
-    print(search,'==================================================================================')
-    if not str(search):
-        await message.answer('По вашему запросу ничего не найдено!')
-    else:
+    for sq in search:
         await message.answer('Результаты поиска', reply_markup=kb.search(message.text))
-
-
-#@router.callback_query(F.data.startswith('search_'))
-#async def search_phones(callback: types.CallbackQuery):
-    #await callback.answer('Вы выбрали смартфоны')
-    #id_product = callback.data.split('_')[1]
-    #sq = db.show_phone_item(id_product)
-    #await callback.message.answer_photo(photo=sq.product_image,
-                                        #caption=f'<b>Название:</b>\n {sq.product_name}\n'
-                                                #f'<b>Описание:</b>\n {sq.product_desc}\n'
-                                                #f'<b>Цена:</b>\n {sq.product_price} руб',
-                                        #reply_markup=kb.add_to_basket)
+        break
+    else:
+        await message.answer('По вашему запросу ничего не найдено!')
 
 
 @router.message(F.text == 'Корзина')
@@ -154,7 +142,7 @@ async def delivery(callback: types.CallbackQuery, state: FSMContext):
 
 
 @router.callback_query(F.data.startswith('catalog_'))
-async def types(callback: types.CallbackQuery):
+async def show_types(callback: types.CallbackQuery):
     id_type = callback.data.split('_')[1]
     await callback.answer('Каталог')
     await callback.message.edit_text('Каталог:', reply_markup=kb.show_producer(id_type))
@@ -162,26 +150,21 @@ async def types(callback: types.CallbackQuery):
 
 @router.callback_query(F.data == 'producer_exit')
 async def produc(callback: types.CallbackQuery):
-    if callback.from_user.id == ADMINS[0]:
-        await callback.message.answer('Каталог', reply_markup=kb.main_admin)
-        await callback.answer('Каталог товаров')
-        await callback.message.edit_text('Каталог с товарами магазина', reply_markup=kb.catalog())
-    else:
-        await callback.message.answer('Каталог', reply_markup=kb.main)
-        await callback.answer('Каталог товаров')
-        await callback.message.edit_text('Каталог с товарами магазина', reply_markup=kb.catalog())
+    await callback.message.edit_text('Каталог с товарами магазина', reply_markup=kb.catalog())
 
 
-@router.callback_query(F.data.startswith('catalog_'))
-async def xiaomi(callback: types.CallbackQuery):
+@router.callback_query(F.data.startswith('producer_'))
+async def show_product(callback: types.CallbackQuery):
+    id_producer = callback.data.split('_')[1]
     await callback.answer('Вы выбрали Xiaomi')
-    await callback.message.edit_text('Каталог:', reply_markup=kb.items_xiaomi())
+    await callback.message.edit_text('Каталог:', reply_markup=kb.items_product(id_producer))
 
 
-@router.callback_query(F.data == 'phone_exit')
+@router.callback_query(F.data.startswith('exit_'))
 async def xiaom(callback: types.CallbackQuery):
+    id_types = callback.data.split('_')[1]
     await callback.answer('Каталог')
-    await callback.message.edit_text('Каталог смартфонов:', reply_markup=kb.show_producer(1))
+    await callback.message.edit_text('Каталог смартфонов:', reply_markup=kb.show_producer(id_types))
 
 
 @router.callback_query(F.data.startswith('product_'))

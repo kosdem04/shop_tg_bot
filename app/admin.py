@@ -4,6 +4,7 @@ from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
 import app.keyboards as kb
 import app.database.request as db
+from aiogram import Bot
 
 from config import ADMINS
 
@@ -25,6 +26,10 @@ class AddItem(StatesGroup):
     description = State()
     price = State()
     image = State()
+
+
+class SendAll(StatesGroup):
+    text_message = State()
 
 
 
@@ -95,3 +100,18 @@ async def add_item_image(message: types.Message, state: FSMContext):
     await state.clear()
     await message.answer('Товар добавлен', reply_markup=kb.admin_panel)
 
+
+# -----------------------------------------------------------------------------------------------------
+@admin.message(AdminProtect(), F.text == 'Сделать рассылку')
+async def sendall_message(message: types.Message, state: FSMContext):
+    await state.set_state(SendAll.text_message)
+    await message.answer('Введите сообщение для рассылки')
+
+
+@admin.message(AdminProtect(), SendAll.text_message)
+async def sendall_to_users(message: types.Message, bot: Bot, state: FSMContext):
+    users = db.send_all()
+    for sq in users:
+        await bot.send_message(chat_id=sq.user_tg_id, text=message.text)
+    await state.clear()
+    await message.answer('Сообщение отправлено всем пользователям', reply_markup=kb.admin_panel)

@@ -8,13 +8,13 @@ from app.database.models import db_main
 
 from config import TOKEN
 
+bot = Bot(token=TOKEN, parse_mode="HTML")
+
+dp = Dispatcher()
 
 async def main():
     await db_main()
 
-    bot = Bot(token=TOKEN, parse_mode="HTML")
-
-    dp = Dispatcher()
     dp.include_routers(router, admin)
     await dp.start_polling(bot)
 
