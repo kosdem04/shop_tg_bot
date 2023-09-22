@@ -85,6 +85,16 @@ async def catalog(message: types.Message, state: FSMContext):
         await message.answer('По вашему запросу ничего не найдено!')
 
 
+@router.callback_query(F.data == 'search_exit')
+async def search_exit(callback: types.CallbackQuery, state: FSMContext):
+    await state.clear()
+    await callback.answer('Главное меню')
+    if callback.from_user.id == ADMINS[0]:
+        await callback.message.answer('Главное меню', reply_markup=kb.main_admin)
+    else:
+        await callback.message.answer('Главное меню', reply_markup=kb.main)
+
+
 @router.message(F.text == 'Корзина')
 async def basket(message: types.Message, state: FSMContext):
     sum=0
@@ -115,7 +125,7 @@ async def register_order(callback: types.CallbackQuery, state: FSMContext):
 @router.callback_query(F.data.startswith('cash_'), Order.payment)
 async def payment(callback: types.CallbackQuery, state: FSMContext):
     id_cash = callback.data.split('_')[1]
-    if id_cash == 1:
+    if id_cash == '1':
         await state.update_data(payment='Наличный')
     else:
         await state.update_data(payment='Безналичный')
@@ -127,12 +137,13 @@ async def payment(callback: types.CallbackQuery, state: FSMContext):
 @router.callback_query(F.data.startswith('delivery_'), Order.delivery)
 async def delivery(callback: types.CallbackQuery, state: FSMContext):
     id_delivery = callback.data.split('_')[1]
-    if id_delivery == 1:
+    if id_delivery == '1':
         await state.update_data(delivery='Самовывоз')
     else:
         await state.update_data(delivery='Курьером')
     data = await state.get_data()
     db.add_order(data['user_id'], data['payment'], data['delivery'], data['sum'])
+    await callback.answer('Зака офрмлен')
     if callback.from_user.id == ADMINS[0]:
         await callback.message.answer('Заказ оформлен. Для просмотра детальной '
                                       'информации о заказе перейдите в раздел "Мои заказы"', reply_markup=kb.main_admin)
@@ -156,7 +167,7 @@ async def produc(callback: types.CallbackQuery):
 @router.callback_query(F.data.startswith('producer_'))
 async def show_product(callback: types.CallbackQuery):
     id_producer = callback.data.split('_')[1]
-    await callback.answer('Вы выбрали Xiaomi')
+    await callback.answer('Производители')
     await callback.message.edit_text('Каталог:', reply_markup=kb.items_product(id_producer))
 
 
@@ -174,6 +185,7 @@ async def item_desc(callback: types.CallbackQuery, state: FSMContext):
     await state.update_data(product_id=id_product)
     await state.set_state(AddBasket.value)
     sq = db.show_phone_item(id_product)
+    tp = db.show_types(sq.producer_id)
     await callback.answer(f'Название: {sq.product_name}')
     basket = db.is_basket(callback.from_user.id, id_product)
     if basket == False:
@@ -182,26 +194,27 @@ async def item_desc(callback: types.CallbackQuery, state: FSMContext):
                                                     f'<b>Описание:</b>\n {sq.product_desc}\n'
                                                     f'<b>Цена:</b>\n {sq.product_price} руб',
                                             reply_markup=kb.del_from_basket(id_product))
-        await callback.message.answer('Каталог:', reply_markup=kb.show_producer(1))
+        await callback.message.answer('Каталог:', reply_markup=kb.show_producer(tp))
     else:
         await callback.message.answer_photo(photo=sq.product_image,
                                             caption=f'<b>Название:</b>\n {sq.product_name}\n'
                                                     f'<b>Описание:</b>\n {sq.product_desc}\n'
                                                     f'<b>Цена:</b>\n {sq.product_price} руб',
                                             reply_markup=kb.add_to_basket(id_product))
-        await callback.message.answer('Каталог:', reply_markup=kb.show_producer(1))
+        await callback.message.answer('Каталог:', reply_markup=kb.show_producer(tp))
 
 
 @router.callback_query(F.data.startswith('addtobasket_'))
 async def add_value_basket(callback: types.CallbackQuery, state: FSMContext):
     await state.set_state(AddBasket.value)
     await callback.answer('Введите количество товара')
-    await callback.message.answer('Введите количество товара')
+    await callback.message.answer('Введите количество товара. Максимальное количество 5 штук')
 
 
 @router.message(AddBasket.value)
 async def add_to_basket(message: types.Message, state: FSMContext):
-    if message.text.isdigit():
+    numbers = ('1', '2', '3', '4', '5')
+    if (message.text.isdigit()) and (message.text in numbers):
         await state.update_data(value=message.text)
         data = await state.get_data()
         sq = db.add_basket(data['user_id'], data['product_id'], data['value'])
@@ -219,7 +232,7 @@ async def add_to_basket(message: types.Message, state: FSMContext):
 
 
 @router.callback_query(F.data.startswith('delfrombasket_'))
-async def del_from_basket(callback: types.CallbackQuery):
+async def del_from_basket(callback: types.CallbackQuery, state: FSMContext):
     await callback.answer(f'Удалить из корзины')
     id_product = callback.data.split('_')[1]
     sq = db.del_basket(callback.from_user.id, id_product)
@@ -230,7 +243,21 @@ async def del_from_basket(callback: types.CallbackQuery):
             await callback.message.answer('Товар удалён из корзины', reply_markup=kb.main_admin)
         else:
             await callback.message.answer('Товар удалён из корзины', reply_markup=kb.main)
-
+        sum=0
+        sq = db.show_basket(callback.from_user.id)
+        if sq == []:
+            await callback.message.answer('Ваша корзина пуста.')
+        else:
+            await callback.message.answer('Ваша корзина', reply_markup=kb.basket(callback.from_user.id))
+            for row in sq:
+                sum = sum+row[2]*row[4]
+            await callback.message.answer('<b>Для изменения количества определённого товара необходимо удалить его из корзины и '
+                                'снова добавить в корзину с нужным количеством</b>')
+            result = "{:,}".format(sum).replace(",", " ")
+            await callback.message.answer(f'Итоговая сумма: {result} руб', reply_markup=kb.register_order)
+            await state.set_state(Order.sum)
+            await state.update_data(sum=sum)
+            await state.set_state(Order.user_id)
 
 # -----------------------------------------------------------------------------------------------------
 @router.message(F.text == 'Контакты')

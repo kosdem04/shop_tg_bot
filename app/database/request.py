@@ -124,7 +124,7 @@ def add_order(user_id, payment, delivery, sum):
         baskets = show_basket(user_id)
         stroka = ''
         for sq in baskets:
-            stroka = stroka + f'{sq[1]}\n'
+            stroka = stroka + f'{sq[1]} — {sq[2]} руб ({sq[4]} шт)\n'
         session.add(Order(user_id=user_id, order_value=stroka, order_sum=sum, order_payment=payment,
                           order_delivery=delivery,
                           order_status='Заказ принят на обработку', order_date=datetime.now()))

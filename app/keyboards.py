@@ -63,8 +63,8 @@ register_order = InlineKeyboardMarkup(inline_keyboard=register_order_kb)
 
 
 payment_order_kb = [
-    [InlineKeyboardButton(text='Наличный', callback_data=f'cash_{1}')],
-    [InlineKeyboardButton(text='Безналичный', callback_data=f'cash_{0}')]
+    [InlineKeyboardButton(text='Наличный', callback_data=f'cash_1')],
+    [InlineKeyboardButton(text='Безналичный', callback_data=f'cash_0')]
 ]
 
 payment_order = InlineKeyboardMarkup(inline_keyboard=payment_order_kb)
@@ -86,14 +86,6 @@ def catalog():
     for sq in catalogs:
         items.row(InlineKeyboardButton(text=sq.type_name, callback_data=f'catalog_{sq.type_id}'))
     return items.adjust(2).as_markup()
-
-
-#def delete_from_basket(product_id):
-    #delete = db.delete_from_basket(product_id)
-    # print(sneakers)
-    #items = InlineKeyboardBuilder()
-    #items = [[InlineKeyboardButton(text='Удалить из корзины', callback_data=str(product_id))]]
-    #return items
 
 
 def show_producer(id_type):
@@ -144,7 +136,7 @@ def basket(user_id):
     # print(sneakers)
     items = InlineKeyboardBuilder()
     for sq in baskets:
-        items.row(InlineKeyboardButton(text=f'{sq[4]}шт {sq[2]} руб - {sq[1]}', callback_data=f'product_{sq[3]}'))
+        items.row(InlineKeyboardButton(text=f'{sq[1]} — {sq[2]} руб ({sq[4]} шт)', callback_data=f'product_{sq[3]}'))
     return items.adjust(1).as_markup()
 
 
