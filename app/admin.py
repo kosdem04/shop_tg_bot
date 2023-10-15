@@ -32,7 +32,6 @@ class SendAll(StatesGroup):
     text_message = State()
 
 
-
 @admin.message(AdminProtect(), F.text == 'Админ-панель')
 async def admin_panel(message: types.Message):
     await message.answer('Вы открыли админ-панель', reply_markup=kb.admin_panel)
@@ -40,7 +39,7 @@ async def admin_panel(message: types.Message):
 
 @admin.message(AdminProtect(), F.text == 'Выйти')
 async def admin_cancel(message: types.Message):
-    await message.answer('Главное меню', reply_markup=kb.main_admin)
+    await message.answer('Главное меню', reply_markup=kb.main)
 
 
 @admin.message(AdminProtect(), F.text == 'Отмена')
@@ -62,7 +61,7 @@ async def add_item_name(message: types.Message, state: FSMContext):
     if exist == False:
         await message.answer('Такого производителя нет в базе данных\n'
                              'Список всех производителей в базе данных:')
-        producer = db.show_phone_producer()
+        producer = db.show_producers()
         for sq in producer:
             await message.answer(f'{sq.producer_name}\n')
     else:

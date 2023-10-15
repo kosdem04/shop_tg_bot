@@ -1,11 +1,10 @@
 from sqlalchemy import select
-from app.database.models import Session, User, Basket, Type, Producer, Product, engine, Order
+from app.database.models import Session, User, Basket, Type, Producer, Product, engine, Order, Pointissue
 from datetime import datetime
 
 
 def add_new_user(tg_id, name):
     with Session.begin() as session:
-        #user = session.query(User).filter(User.user_tg_id == tg_id).scalar()
         user = session.scalar(select(User).where(User.user_tg_id == tg_id))
         if not user:
             session.add(User(user_tg_id=tg_id, user_name=name))
@@ -70,6 +69,14 @@ def show_producer(id_type):
         return producer
 
 
+def show_producers():
+    with Session.begin() as session:
+        producer = session.query(Producer).all()
+        session.expunge_all()
+        session.close()
+        return producer
+
+
 def add_basket(user_id, product_id, basket_count):
     with Session.begin() as session:
         basket = session.scalar(select(Basket).where(Basket.user_id == user_id, Basket.product_id == product_id))
@@ -119,14 +126,26 @@ def search(stroka):
         return searches
 
 
-def add_order(user_id, payment, delivery, sum):
+def add_order(user_id, payment, delivery, sum, address):
     with Session.begin() as session:
         baskets = show_basket(user_id)
         stroka = ''
         for sq in baskets:
             stroka = stroka + f'{sq[1]} — {sq[2]} руб ({sq[4]} шт)\n'
         session.add(Order(user_id=user_id, order_value=stroka, order_sum=sum, order_payment=payment,
-                          order_delivery=delivery,
+                          order_delivery=delivery, order_address=address,
+                          order_status='Заказ принят на обработку', order_date=datetime.now()))
+        session.commit()
+
+
+def add_order_point(user_id, payment, delivery, sum, address):
+    with Session.begin() as session:
+        baskets = show_basket(user_id)
+        stroka = ''
+        for sq in baskets:
+            stroka = stroka + f'{sq[1]} — {sq[2]} руб ({sq[4]} шт)\n'
+        session.add(Order(user_id=user_id, order_value=stroka, order_sum=sum, order_payment=payment,
+                          order_delivery=delivery, pointissue_address=address,
                           order_status='Заказ принят на обработку', order_date=datetime.now()))
         session.commit()
 
@@ -170,3 +189,19 @@ def send_all():
         session.expunge_all()
         session.close()
         return users
+
+
+def show_pointissue():
+    with Session.begin() as session:
+        pointissues = session.query(Pointissue).all()
+        session.expunge_all()
+        session.close()
+        return pointissues
+
+
+def show_pointissues(point_id):
+    with Session.begin() as session:
+        pointissue = session.scalar(select(Pointissue.pointissue_address).where(Pointissue.pointissue_id == point_id))
+        session.expunge_all()
+        session.close()
+        return pointissue

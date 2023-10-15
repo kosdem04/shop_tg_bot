@@ -80,9 +80,20 @@ class Order(Base):
     order_sum: Mapped[int]
     order_payment: Mapped[str] = mapped_column(String(50))
     order_delivery: Mapped[str] = mapped_column(String(50))
+    pointissue_address: Mapped[str] = mapped_column(ForeignKey("pointissue.pointissue_id", ondelete='CASCADE'), default='нет')
+    order_address: Mapped[str] = mapped_column(String(200), default='нет')
     order_status: Mapped[str] = mapped_column(String(50))
     order_date: Mapped[datetime.datetime]
     user: Mapped["User"] = relationship(back_populates="order", cascade='all, delete')
+    pointissue: Mapped["Pointissue"] = relationship(back_populates="order", cascade='all, delete')
+
+
+class Pointissue(Base):
+    __tablename__ = "pointissue"
+
+    pointissue_id: Mapped[int] = mapped_column(primary_key=True)
+    pointissue_address: Mapped[str] = mapped_column(String(200))
+    order: Mapped[List["Order"]] = relationship(back_populates="pointissue")
 
 
 async def db_main():

@@ -18,21 +18,6 @@ main = ReplyKeyboardMarkup(keyboard=main_kb,
                            resize_keyboard=True,
                            input_field_placeholder='Выберите пункт меню.')
 
-# Основные кнопки бота при команде /start для администратора
-main_admin_kb = [
-    [KeyboardButton(text='Каталог'),
-     KeyboardButton(text='Корзина')],
-    [KeyboardButton(text='Контакты'),
-     KeyboardButton(text='Админ-панель')],
-    [KeyboardButton(text='Найти'),
-     KeyboardButton(text='Мои заказы')],
-]
-
-main_admin = ReplyKeyboardMarkup(keyboard=main_admin_kb,
-                                 resize_keyboard=True,
-                                 input_field_placeholder='Выберите пункт меню.')
-
-
 # Основные кнопки бота админ-панели
 admin_panel_kb = [
     [KeyboardButton(text='Добавить товар')],
@@ -51,8 +36,8 @@ add_kb = [
 ]
 
 add = ReplyKeyboardMarkup(keyboard=add_kb,
-                                  resize_keyboard=True,
-                                  input_field_placeholder='Выберите пункт меню.')
+                          resize_keyboard=True,
+                          input_field_placeholder='Выберите пункт меню.')
 
 
 register_order_kb = [
@@ -76,6 +61,14 @@ delivery_order_kb = [
 ]
 
 delivery_order = InlineKeyboardMarkup(inline_keyboard=delivery_order_kb)
+
+
+share_location_kb = [
+    [KeyboardButton(text='Отправить геоданные', request_location=True)],
+]
+
+share_location = ReplyKeyboardMarkup(keyboard=share_location_kb,
+                                     resize_keyboard=True,)
 
 
 # Основные кнопки бота при просмотре каталога
@@ -128,7 +121,13 @@ def search(stroka):
     for sq in search:
         items.row(InlineKeyboardButton(text=sq.product_name, callback_data=f'product_{sq.product_id}'))
     items.row(InlineKeyboardButton(text='Вернуться в главное меню', callback_data='search_exit'))
-    return items.adjust(2).as_markup()
+    return items.adjust(1).as_markup()
+
+
+def not_search():
+    items = InlineKeyboardBuilder()
+    items.row(InlineKeyboardButton(text='Вернуться в главное меню', callback_data='search_exit'))
+    return items.adjust(1).as_markup()
 
 
 def basket(user_id):
@@ -148,4 +147,9 @@ def order(user_id):
         items.row(InlineKeyboardButton(text=f'Заказ №{sq[0]}', callback_data=f'order_{sq[0]}'))
     return items.adjust(1).as_markup()
 
-
+def show_pointissue():
+    pointissues = db.show_pointissue()
+    items = InlineKeyboardBuilder()
+    for sq in pointissues:
+        items.row(InlineKeyboardButton(text=f'{sq.pointissue_address}', callback_data=f'pointissue_{sq.pointissue_id}'))
+    return items.adjust(2).as_markup()
