@@ -114,3 +114,22 @@ async def sendall_to_users(message: types.Message, bot: Bot, state: FSMContext):
         await bot.send_message(chat_id=sq.user_tg_id, text=message.text)
     await state.clear()
     await message.answer('Сообщение отправлено всем пользователям', reply_markup=kb.admin_panel)
+
+
+@admin.message(AdminProtect(), F.text == 'Удалить товар')
+async def del_item(message: types.Message):
+    await message.answer('Выберете товар, который хотите удалить', reply_markup=kb.all_product())
+
+
+@admin.callback_query(AdminProtect(), F.data.startswith('del_'))
+async def del_item_name(callback: types.CallbackQuery):
+    id_item = callback.data.split('_')[1]
+    db.del_item(id_item)
+    await callback.answer('Товар удалён')
+    await callback.message.answer('Товар удалён', reply_markup=kb.admin_panel)
+
+
+@admin.callback_query(AdminProtect(), F.data == 'exit')
+async def exts(callback: types.CallbackQuery):
+    await callback.answer('Админ-панель')
+    await callback.message.answer('👇 Админ-панель 👇', reply_markup=kb.admin_panel)

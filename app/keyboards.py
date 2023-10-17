@@ -6,12 +6,12 @@ import app.database.request as db
 
 # Основные кнопки бота при команде /start
 main_kb = [
+    [KeyboardButton(text='Каталог'),
+     KeyboardButton(text='Корзина')],
     [KeyboardButton(text='Мои заказы'),
-     KeyboardButton(text='Каталог')],
-    [KeyboardButton(text='Корзина'),
-     KeyboardButton(text='Контакты')],
-    [KeyboardButton(text='Помощь'),
      KeyboardButton(text='Найти')],
+    [KeyboardButton(text='Помощь'),
+     KeyboardButton(text='Контакты')],
 ]
 
 main = ReplyKeyboardMarkup(keyboard=main_kb,
@@ -32,7 +32,7 @@ admin_panel = ReplyKeyboardMarkup(keyboard=admin_panel_kb,
 
 
 add_kb = [
-    [KeyboardButton(text='Отмена')],
+    [KeyboardButton(text='🔴Отмена')],
 ]
 
 add = ReplyKeyboardMarkup(keyboard=add_kb,
@@ -87,7 +87,7 @@ def show_producer(id_type):
     items = InlineKeyboardBuilder()
     for sq in producers:
         items.row(InlineKeyboardButton(text=sq.producer_name, callback_data=f'producer_{sq.producer_id}'))
-    items.row(InlineKeyboardButton(text='Назад', callback_data='producer_exit'))
+    items.row(InlineKeyboardButton(text='🔴Назад', callback_data='producer_exit'))
     return items.adjust(2).as_markup()
 
 
@@ -98,7 +98,17 @@ def items_product(id_producer):
     items = InlineKeyboardBuilder()
     for sq in products:
         items.row(InlineKeyboardButton(text=sq.product_name, callback_data=f'product_{sq.product_id}'))
-    items.row(InlineKeyboardButton(text='Назад', callback_data=f'exit_{types}'))
+    items.row(InlineKeyboardButton(text='🔴Назад', callback_data=f'exit_{types}'))
+    return items.adjust(2).as_markup()
+
+
+def all_product():
+    products = db.show_all_item()
+    # print(sneakers)
+    items = InlineKeyboardBuilder()
+    for sq in products:
+        items.row(InlineKeyboardButton(text=sq.product_name, callback_data=f'del_{sq.product_id}'))
+    items.row(InlineKeyboardButton(text='🔴Назад', callback_data=f'exit'))
     return items.adjust(2).as_markup()
 
 

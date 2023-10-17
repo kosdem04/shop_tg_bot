@@ -61,6 +61,14 @@ def show_phone_item(sq_id):
         return phone
 
 
+def show_all_item():
+    with Session.begin() as session:
+        phone = session.query(Product).all()
+        session.expunge_all()
+        session.close()
+        return phone
+
+
 def show_producer(id_type):
     with Session.begin() as session:
         producer = session.query(Producer).filter(Producer.type_id == id_type).all()
@@ -105,6 +113,12 @@ def del_basket(user_id, product_id):
             session.query(Basket).filter(Basket.user_id == user_id, Basket.product_id == product_id).delete()
             #session.delete(basket)
             session.commit()
+
+
+def del_item(product_id):
+    with Session.begin() as session:
+        session.query(Product).filter(Product.product_id == product_id).delete()
+        session.commit()
 
 
 def show_basket(user_id):

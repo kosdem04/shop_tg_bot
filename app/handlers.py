@@ -36,7 +36,7 @@ async def cmd_start(message: types.Message, state: FSMContext):
     await state.set_state(AddBasket.user_id)
     await state.update_data(user_id=message.from_user.id)
     db.add_new_user(message.from_user.id, message.from_user.first_name)
-    await message.answer(f'Добро пожаловать, {message.from_user.first_name}!',
+    await message.answer(f'🖐 Привет 🖐\n Добро пожаловать в магазин электроники!',
                          reply_markup=kb.main)
 
 
@@ -44,14 +44,14 @@ async def cmd_start(message: types.Message, state: FSMContext):
 async def catalog(message: types.Message, state: FSMContext):
     await state.set_state(AddBasket.user_id)
     await state.update_data(user_id=message.from_user.id)
-    await message.answer('Каталог с товарами магазина', reply_markup=kb.catalog())
+    await message.answer('👇 Каталог с товарами магазина 👇', reply_markup=kb.catalog())
 
 
 @router.message(F.text == 'Мои заказы')
-async def catalog(message: types.Message):
+async def orders(message: types.Message):
     sq = db.is_order(message.from_user.id)
     if sq:
-        await message.answer('Мои заказы', reply_markup=kb.order(message.from_user.id))
+        await message.answer('👇 Мои заказы 👇', reply_markup=kb.order(message.from_user.id))
     else:
         await message.answer('У вас нет заказов')
 
@@ -79,22 +79,6 @@ async def phones(callback: types.CallbackQuery):
                                            f'<b>Статус:</b> {sq.order_status}\n')
 
 
-@router.message(F.text == 'Найти')
-async def catalog(message: types.Message, state: FSMContext):
-    await state.set_state(Search.text)
-    await message.answer('Введите значение')
-
-
-@router.message(Search.text)
-async def catalog(message: types.Message):
-    search = db.search(message.text)
-    for sq in search:
-        await message.answer('Результаты поиска', reply_markup=kb.search(message.text))
-        break
-    else:
-        await message.answer('По вашему запросу ничего не найдено!', reply_markup=kb.not_search())
-
-
 @router.callback_query(F.data == 'search_exit')
 async def search_exit(callback: types.CallbackQuery, state: FSMContext):
     await state.clear()
@@ -107,12 +91,12 @@ async def basket(message: types.Message, state: FSMContext):
     sum = 0
     sq = db.show_basket(message.from_user.id)
     if sq == []:
-        await message.answer('Ваша корзина пуста.')
+        await message.answer('Ваша корзина пуста 🙃')
     else:
-        await message.answer('Ваша корзина', reply_markup=kb.basket(message.from_user.id))
+        await message.answer('Ваша корзина 🛒', reply_markup=kb.basket(message.from_user.id))
         for row in sq:
             sum = sum+row[2]*row[4]
-        await message.answer('<b>Для изменения количества определённого товара необходимо удалить его из корзины и '
+        await message.answer('<b>‼️ Внимание ‼️\nДля изменения количества определённого товара необходимо удалить его из корзины и '
                              'снова добавить в корзину с нужным количеством</b>')
         result = "{:,}".format(sum).replace(",", " ")
         await message.answer(f'Итоговая сумма: {result} руб', reply_markup=kb.register_order)
@@ -153,20 +137,15 @@ async def delivery(callback: types.CallbackQuery, state: FSMContext):
         await state.update_data(delivery='Курьером')
         await state.set_state(Order.address)
         await callback.answer('Отправьте свои геоданные')
-        await callback.message.answer('<b>Доставка курьером осуществляется только по г.Новосибирску в радиусе 10 км.</b>')
+        await callback.message.answer('<b>Доставка курьером осуществляется только по г.Новосибирску в '
+                                      'радиусе 10 км.</b>')
         await callback.message.answer('<b>Введите адрес в формате: улица, номер дома, Новосибирск, Россия </b>')
-        #await callback.message.answer('Введите свои геоданные для определения адреса доставки.\n'
-                                      #'Для этого нужно:\n '
-                                      #'<b>1. Отправить свои геоданные с телефона</b>'
-                                     # '<b>2. Находится в том месте, куда вы хотите заказать доставку</b>')
-        #await callback.message.answer('Отправьте свои геоданные:', reply_markup=kb.share_location)
 
 
 @router.message(Order.address)
 async def delivery_address(message: types.Message, state: FSMContext):
     address = message.text
     location = geolocator.geocode(address)
-    print(f'Ваши геоданные {location}')
     if location is None:
         await message.reply("Не удалось найти указанный адрес.", reply_markup=kb.main)
     latitude = location.latitude
@@ -188,7 +167,7 @@ async def delivery_address(message: types.Message, state: FSMContext):
     else:
         await message.answer('Невозможно доставить заказ по заданному адресу.\n '
                              'Оформите заказ снова и выберите "Способ доставки: Самовывоз".',
-                                 reply_markup=kb.main)
+                             reply_markup=kb.main)
 
 
 @router.callback_query(F.data.startswith('pointissue_'), Order.pointaddress)
@@ -206,27 +185,27 @@ async def delivery_pointissue(callback: types.CallbackQuery, state: FSMContext):
 @router.callback_query(F.data.startswith('catalog_'))
 async def show_types(callback: types.CallbackQuery):
     id_type = callback.data.split('_')[1]
-    await callback.answer('Каталог')
-    await callback.message.edit_text('Каталог:', reply_markup=kb.show_producer(id_type))
+    await callback.answer('Производители')
+    await callback.message.edit_text('👇 Производители 👇', reply_markup=kb.show_producer(id_type))
 
 
 @router.callback_query(F.data == 'producer_exit')
 async def produc(callback: types.CallbackQuery):
-    await callback.message.edit_text('Каталог с товарами магазина', reply_markup=kb.catalog())
+    await callback.message.edit_text('👇 Каталог с товарами магазина 👇', reply_markup=kb.catalog())
 
 
 @router.callback_query(F.data.startswith('producer_'))
 async def show_product(callback: types.CallbackQuery):
     id_producer = callback.data.split('_')[1]
-    await callback.answer('Производители')
-    await callback.message.edit_text('Каталог:', reply_markup=kb.items_product(id_producer))
+    await callback.answer('Товары')
+    await callback.message.edit_text('👇 Товары 👇', reply_markup=kb.items_product(id_producer))
 
 
 @router.callback_query(F.data.startswith('exit_'))
 async def xiaom(callback: types.CallbackQuery):
     id_types = callback.data.split('_')[1]
-    await callback.answer('Каталог')
-    await callback.message.edit_text('Каталог смартфонов:', reply_markup=kb.show_producer(id_types))
+    await callback.answer('Производители')
+    await callback.message.edit_text('👇 Производители 👇', reply_markup=kb.show_producer(id_types))
 
 
 @router.callback_query(F.data.startswith('product_'))
@@ -255,29 +234,6 @@ async def item_desc(callback: types.CallbackQuery, state: FSMContext):
         await callback.message.answer('Каталог:', reply_markup=kb.show_producer(tp))
 
 
-@router.callback_query(F.data.startswith('addtobasket_'))
-async def add_value_basket(callback: types.CallbackQuery, state: FSMContext):
-    await state.set_state(AddBasket.value)
-    await callback.answer('Введите количество товара')
-    await callback.message.answer('Введите количество товара. Максимальное количество 5 штук')
-
-
-@router.message(AddBasket.value)
-async def add_to_basket(message: types.Message, state: FSMContext):
-    numbers = ('1', '2', '3', '4', '5')
-    if (message.text.isdigit()) and (message.text in numbers):
-        await state.update_data(value=message.text)
-        data = await state.get_data()
-        sq = db.add_basket(data['user_id'], data['product_id'], data['value'])
-        if sq == False:
-            await message.answer('Этот товар уже лежит в вашей корзине!\n'
-                                 'Для изменения количества товара зайдите в корзину:)')
-        else:
-            await message.answer('Товар добавлен в корзину', reply_markup=kb.main)
-    else:
-        await message.answer('Вы ввели некорректное значение')
-    #await state.clear()
-
 
 @router.callback_query(F.data.startswith('delfrombasket_'))
 async def del_from_basket(callback: types.CallbackQuery, state: FSMContext):
@@ -291,7 +247,7 @@ async def del_from_basket(callback: types.CallbackQuery, state: FSMContext):
         sum = 0
         sq = db.show_basket(callback.from_user.id)
         if sq == []:
-            await callback.message.answer('Ваша корзина пуста.')
+            await callback.message.answer('Ваша корзина пуста 🙃')
         else:
             await callback.message.answer('Ваша корзина', reply_markup=kb.basket(callback.from_user.id))
             for row in sq:
@@ -317,3 +273,43 @@ async def contacts(message: types.Message):
 async def helping(message: types.Message):
     await message.answer('В случае возникновения проблем свяжитесь с'
                          ' нашим оператором @kosdem04')
+
+
+@router.callback_query(F.data.startswith('addtobasket_'))
+async def add_value_basket(callback: types.CallbackQuery, state: FSMContext):
+    await state.set_state(AddBasket.value)
+    await callback.answer('Введите количество товара')
+    await callback.message.answer('Введите количество товара. Максимальное количество 5 штук')
+
+
+@router.message(AddBasket.value)
+async def add_to_basket(message: types.Message, state: FSMContext):
+    numbers = ('1', '2', '3', '4', '5')
+    if (message.text.isdigit()) and (message.text in numbers):
+        await state.update_data(value=message.text)
+        data = await state.get_data()
+        sq = db.add_basket(data['user_id'], data['product_id'], data['value'])
+        if sq == False:
+            await message.answer('Этот товар уже лежит в вашей корзине!\n'
+                                 'Для изменения количества товара зайдите в корзину:)')
+        else:
+            await message.answer('Товар добавлен в корзину', reply_markup=kb.main)
+    else:
+        await message.answer('Вы ввели некорректное значение')
+
+
+@router.message(F.text == 'Найти')
+async def catalog(message: types.Message, state: FSMContext):
+    await state.clear()
+    await state.set_state(Search.text)
+    await message.answer('Введите значение')
+
+
+@router.message(Search.text)
+async def catalog(message: types.Message):
+    search = db.search(message.text)
+    for sq in search:
+        await message.answer('Результаты поиска', reply_markup=kb.search(message.text))
+        break
+    else:
+        await message.answer('По вашему запросу ничего не найдено!', reply_markup=kb.not_search())
